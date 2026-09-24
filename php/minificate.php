@@ -1,68 +1,45 @@
 <?php
-function minify_html($buffer) {
-    // Remove spaces between HTML tags
-    $buffer = preg_replace('/>\s+</', '><', $buffer);
 
-    // General HTML minification
-    $search = [
-        '/\>[^\S ]+/s',  // Remove spaces after tags
-        '/[^\S ]+\</s',  // Remove spaces before tags
-        '/(\s)+/s'       // Reduce multiple spaces
-    ];
+/*
+ * Single-Liner v1 compatibility layer.
+ *
+ * The three global functions of the first release are kept so existing
+ * `require_once "php/minificate.php"; ob_start('minify_html');` setups keep
+ * working, but they are now thin wrappers over TrinsyCa\SingleLiner\SingleLiner
+ * and inherit its guarantees: inline <script>/<style>, <pre>, <textarea> and
+ * attribute values are never rewritten, whitespace between inline elements is
+ * never deleted, and a failure returns the input instead of null (an output
+ * buffer callback that returns null blanks the whole page).
+ */
 
-    $replace = [
-        '>',
-        '<',
-        '\\1'
-    ];
-
-    // Apply minification
-    $buffer = preg_replace($search, $replace, $buffer);
-
-    // Minify inline scripts
-    $buffer = preg_replace_callback(
-        '#<script\b[^>]*>(.*?)<\/script>#is',
-        function($matches) {
-            if (strpos($matches[0], 'src=') !== false) {
-                return $matches[0]; // Skip external scripts
-            }
-            $js_minified = minify_js($matches[1]);
-            return "<script>{$js_minified}</script>";
-        },
-        $buffer
-    );
-
-    return $buffer;
+if (! class_exists(\TrinsyCa\SingleLiner\SingleLiner::class)) {
+    require_once __DIR__ . '/../src/SingleLiner.php';
 }
 
-function minify_js($js) {
-    $search = [
-        '/\s+/' // Remove extra spaces
-    ];
+if (! function_exists('minify_html')) {
+    /**
+     * Usable directly as an output buffer callback: ob_start('minify_html').
+     */
+    function minify_html($buffer): string
+    {
+        if (! is_string($buffer) || $buffer === '') {
+            return (string) $buffer;
+        }
 
-    $replace = [
-        ' ' // Single space
-    ];
-
-    $js = preg_replace($search, $replace, $js);
-    $js = str_replace(["\r\n", "\r", "\n"], '', $js);
-
-    return trim($js);
+        return \TrinsyCa\SingleLiner\SingleLiner::minifyHtml($buffer);
+    }
 }
 
-function minify_css($css) {
-    $search = [
-        '/\s+/',            // Remove extra spaces
-        '/\/\*.*?\*\//s'    // Remove comments
-    ];
+if (! function_exists('minify_js')) {
+    function minify_js($js): string
+    {
+        return \TrinsyCa\SingleLiner\SingleLiner::minifyJs((string) $js);
+    }
+}
 
-    $replace = [
-        ' ',
-        ''
-    ];
-
-    $css = preg_replace($search, $replace, $css);
-    $css = str_replace(["\r\n", "\r", "\n"], '', $css);
-
-    return trim($css);
+if (! function_exists('minify_css')) {
+    function minify_css($css): string
+    {
+        return \TrinsyCa\SingleLiner\SingleLiner::minifyCss((string) $css);
+    }
 }

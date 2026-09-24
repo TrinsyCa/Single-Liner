@@ -1,0 +1,124 @@
+
+
+
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+    <head>
+        <script>document.documentElement.classList.add('dash-boot');</script>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>İş Detayı | Demo</title>
+        <style id="theme-vars">
+            :root { --main-color: white; --main-font: 'Montserrat', sans-serif; }
+        </style>
+        <script>
+            // Preferences rendered by the server.
+            window.__prefs = {"theme":"dark","font":"Montserrat"};
+            // Early queue for inline page scripts.
+            window.__queue = window.__queue || [];
+            window.onPageLoad = window.onPageLoad || function (cb) { window.__queue.push(cb); };
+        </script>
+    </head>
+    <body>
+        <!-- shell -->
+        <div id="shell" x-persist="shell">
+            <nav class="menu">
+                <a href="/dash" class="my-menu active-menu"
+                   wire:navigate>
+                    <i class="fa-solid fa-house"></i>
+                    <span>Ana Sayfa</span>
+                </a>
+                <a href="/dash/jobs" class="my-menu" wire:navigate>
+                    <i class="fa-solid fa-list"></i>
+                    <span>İş Listesi</span>
+                </a>
+            </nav>
+        </div>
+        <div id="page" data-title="İş Detayı" data-menu="jobs">
+            <div class="content">
+                <div class="title">
+                    <h1>İş Detayı</h1>
+                    <div>
+                        <button type="button" onclick="openHistory()"><i class="fa-solid fa-clock-rotate-left"></i> <span>Geçmiş</span></button>
+                        <button type="button" class="jd-danger-btn"><i class="fa-solid fa-trash"></i><span>Sil</span></button>
+                    </div>
+                </div>
+                <div class="jd-card">
+                    <span class="jd-label">Açıklama</span>
+                    <p class="jd-value" data-ws-keep>Havalimanından otele transfer.
+Bagaj: 3 büyük valiz.
+
+    Not: bebek koltuğu gerekli.</p>
+                </div>
+                <div class="jd-card">
+                    <span class="jd-label">Yolcular</span>
+                    <ul class="jd-people-list jd-value" data-ws-keep>
+                        <li>Ali Veli</li>
+                        <li>Ayşe  Yılmaz</li>
+                    </ul>
+                </div>
+                <div class="jd-card">
+                    <span class="jd-label">Saat</span>
+                    <span class="jd-value" data-ticker="swap"><i class="fa-regular fa-clock"></i> <span data-live-time>09:00</span></span>
+                </div>
+                <!--[if BLOCK]><![endif]-->
+                    <div class="jd-card"><span class="jd-label">Ücret</span> <b>1.234,56₺</b>&nbsp;<small>(EUR 30)</small></div>
+                <!--[if ENDBLOCK]><![endif]-->
+                <form class="profile" method="post" action="/dash/drivers/1">
+                    <label for="note">Not</label>
+                    <textarea id="note" name="note">
+Birinci satır
+    girintili ikinci satır
+
+son satır  </textarea>
+                    <input type="text"
+                           name="plate"
+                           value="34  ABC  123">
+                </form>
+                <pre class="int-snippet"><code>$booking = [
+    'reference' => 'ABC-123',   // the site's own id
+
+    'legs' => [],
+];</code></pre>
+                <table id="example" class="jobs-table">
+                    <thead>
+                        <tr>
+                            <th data-filter="date">Tarih</th>
+                            <th>Şoför</th>
+                            <th data-filter-type="number">Tutar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-href="/dash/jobs/1">
+                            <td>25/09/2026 - Cuma</td>
+                            <td>
+                                <span>Ali Veli</span>
+                                <span class="driver-wp">+90 555 000 00 00</span>
+                            </td>
+                            <td data-filter="1234.56" data-copy="Satır 1
+Satır 2">1.234,56₺</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <svg viewBox="0 0 10 10" aria-hidden="true">
+                    <path d="M0 0
+                             L10 10"/>
+                    <title>  ikon  </title>
+                </svg>
+                <script type="application/json" id="vehiclePanelData">{"plate": "34  ABC  123", "notes": "a\nb"}</script>
+                <script data-copy-state type="application/json">
+                    {"templates": [{"name": "Varsayılan", "body": "{{job.date}}  {{job.time}}"}]}
+                </script>
+            </div>
+        </div>
+        <div id="notifications"></div>
+        <script>
+            // Page init, scoped to this page.
+            window.onPageLoad(function () {
+                var page = document.querySelector('[data-page="jobs-show"]')
+                if (!page) return
+                var text = page.innerText
+            })
+        </script>
+    </body>
+</html>
