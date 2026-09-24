@@ -195,12 +195,18 @@ It returns the input unchanged if it meets an unterminated string or comment.
 ## Laravel
 
 Register a response middleware in the `web` group only. Leave out API, JSON,
-file downloads and Livewire component updates:
+file downloads and Livewire component updates.
+
+Checking for `text/html` is not enough on its own. Laravel's router prepares
+every response before it goes back through the middleware, and it labels any
+plain string without a content type as `text/html`, including hand-built
+JSON and plain text. Minify only responses rendered from a Blade view:
 
 ```php
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use TrinsyCa\SingleLiner\SingleLiner;
@@ -212,12 +218,18 @@ class MinifyHtml
         $response = $next($request);
 
         if ($response instanceof Response
-            && str_starts_with((string) $response->headers->get('Content-Type'), 'text/html')
+            && $response->getOriginalContent() instanceof View
+            && str_starts_with((string) $response->headers->get('Content-Type', 'text/html'), 'text/html')
             && ! $response->headers->has('Content-Encoding')
             && ! str_contains((string) $response->headers->get('Content-Disposition'), 'attachment')
             && ! in_array($response->getStatusCode(), [204, 304], true)
             && ! $request->hasHeader('X-Livewire')) {
-            $response->setContent(SingleLiner::minifyHtml((string) $response->getContent()));
+            $html = SingleLiner::minifyHtml((string) $response->getContent());
+            if (SingleLiner::lastError() === null) {
+                $original = $response->original;   // setContent() would drop the View
+                $response->setContent($html);
+                $response->original = $original;
+            }
         }
 
         return $response;
@@ -231,6 +243,10 @@ class MinifyHtml
     $middleware->web(append: [\App\Http\Middleware\MinifyHtml::class]);
 })
 ```
+
+Do not skip `X-Livewire-Navigate` requests. A page fetched by `wire:navigate`
+must be minified exactly like a full load, or scripts that compare the live
+DOM with a fresh fetch will see differences that are not there.
 
 Do not use `ob_start()` in a framework front controller. It would also run
 over images, PDFs and JSON.
